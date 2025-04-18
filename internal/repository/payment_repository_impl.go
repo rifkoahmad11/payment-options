@@ -2,7 +2,6 @@ package repository
 
 import (
 	"payment-options/internal/models"
-	"time"
 )
 
 type paymentRepo struct{}
@@ -12,7 +11,6 @@ func NewPaymentRepo() PaymentRepository {
 }
 
 func (r *paymentRepo) CallOVO() models.PaymentMethod {
-	time.Sleep(2 * time.Second) // Simulate network delay
 	return models.PaymentMethod{
 		Account: "6288xx",
 		Status:  "Active",
