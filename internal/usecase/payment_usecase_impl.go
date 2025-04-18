@@ -65,4 +65,4 @@ func (u *paymentUsecase) GetPaymentOptions() (map[string]models.PaymentMethod, e
 
 	wg.Wait()
 	return result, nil
-}
+}   
