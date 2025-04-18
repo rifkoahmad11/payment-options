@@ -3,6 +3,7 @@ package usecase
 import (
 	"payment-options/internal/models"
 	"payment-options/internal/repository"
+	"sync"
 )
 
 type paymentUsecase struct {
@@ -14,49 +15,54 @@ func NewPaymentUsecase(r repository.PaymentRepository) PaymentUsecase {
 }
 
 func (u *paymentUsecase) GetPaymentOptions() (map[string]models.PaymentMethod, error) {
+	var wg sync.WaitGroup
 	result := make(map[string]models.PaymentMethod)
+	mu := sync.Mutex{}
 
-	// OVO
-	ovo, err := u.repo.CallOVO()
-	if err != nil {
-		return nil, err
-	}
-	result["ovo"] = ovo
+	wg.Add(6)
 
-	// DANA
-	dana, err := u.repo.CallDANA()
-	if err != nil {
-		return nil, err
-	}
-	result["dana"] = dana
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		result["ovo"] = u.repo.CallOVO()
+		mu.Unlock()
+	}()
 
-	// GoPay
-	gopay, err := u.repo.CallGoPay()
-	if err != nil {
-		return nil, err
-	}
-	result["gopay"] = gopay
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		result["dana"] = u.repo.CallDANA()
+		mu.Unlock()
+	}()
 
-	// ShopeePay
-	shopee, err := u.repo.CallShopee()
-	if err != nil {
-		return nil, err
-	}
-	result["shopee"] = shopee
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		result["gopay"] = u.repo.CallGoPay()
+		mu.Unlock()
+	}()
 
-	// OneKlik
-	oneklik, err := u.repo.CallOneKlik()
-	if err != nil {
-		return nil, err
-	}
-	result["oneklik"] = oneklik
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		result["shopee"] = u.repo.CallShopee()
+		mu.Unlock()
+	}()
 
-	// BRIDD
-	bridd, err := u.repo.CallBRIDD()
-	if err != nil {
-		return nil, err
-	}
-	result["bridd"] = bridd
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		result["oneklik"] = u.repo.CallOneKlik()
+		mu.Unlock()
+	}()
 
+	go func() {
+		defer wg.Done()
+		mu.Lock()
+		result["bridd"] = u.repo.CallBRIDD()
+		mu.Unlock()
+	}()
+
+	wg.Wait()
 	return result, nil
-}
+}   
